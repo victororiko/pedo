@@ -5,7 +5,7 @@
 # Model
 # =============================================================================
 model:
-  name: "google/gemma-4-26B-A4B-it"       # Gemma 4 26B MoE (4B active params)
+  name: "google/gemma-4-31B-it"            # Gemma 4 31B dense model
   torch_dtype: "bfloat16"
   attn_implementation: "eager"             # Use eager if flash-attn not available
   trust_remote_code: true
