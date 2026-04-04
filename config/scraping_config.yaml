@@ -1,0 +1,309 @@
+# =============================================================================
+# Elumina — Data Scraping Configuration
+# =============================================================================
+
+# Rate limiting (be respectful to servers)
+scraping:
+  requests_per_second: 1
+  request_timeout: 30
+  max_retries: 3
+  retry_delay: 5
+  user_agent: "EluminaDataCollector/1.0 (Research; Intevia Ltd; Nairobi Kenya)"
+
+# =============================================================================
+# Kenyan News & Media Sites
+# =============================================================================
+news_sites:
+  - name: "Nation Africa"
+    base_url: "https://nation.africa"
+    sitemap_url: "https://nation.africa/sitemap.xml"
+    selectors:
+      article_body: "article, .article-body, .story-body"
+      title: "h1"
+      date: "time, .date, .published-date"
+    categories:
+      - "/kenya/"
+      - "/kenya/news/"
+      - "/kenya/counties/"
+      - "/blogs/"
+
+  - name: "The Standard"
+    base_url: "https://www.standardmedia.co.ke"
+    sitemap_url: "https://www.standardmedia.co.ke/sitemap.xml"
+    selectors:
+      article_body: ".article-body, .story-content"
+      title: "h1"
+      date: "time"
+    categories:
+      - "/kenya/"
+      - "/counties/"
+      - "/business/"
+      - "/entertainment/"
+
+  - name: "The Star Kenya"
+    base_url: "https://www.the-star.co.ke"
+    sitemap_url: "https://www.the-star.co.ke/sitemap.xml"
+    selectors:
+      article_body: ".article-body, .field-item"
+      title: "h1"
+      date: "time, .date"
+    categories:
+      - "/news/"
+      - "/counties/"
+      - "/business/"
+      - "/culture/"
+
+  - name: "Business Daily Africa"
+    base_url: "https://www.businessdailyafrica.com"
+    sitemap_url: "https://www.businessdailyafrica.com/sitemap.xml"
+    selectors:
+      article_body: ".article-body, .story-body"
+      title: "h1"
+      date: "time"
+    categories:
+      - "/economy/"
+      - "/markets/"
+      - "/corporate/"
+      - "/technology/"
+
+  - name: "Tuko News"
+    base_url: "https://www.tuko.co.ke"
+    sitemap_url: "https://www.tuko.co.ke/sitemap.xml"
+    selectors:
+      article_body: ".post-content, article"
+      title: "h1"
+      date: "time"
+    categories:
+      - "/kenya/"
+      - "/entertainment/"
+      - "/business-economy/"
+
+  - name: "Kenyans.co.ke"
+    base_url: "https://www.kenyans.co.ke"
+    selectors:
+      article_body: ".article-content, .post-body"
+      title: "h1"
+      date: "time, .date"
+    categories:
+      - "/news/"
+      - "/entertainment/"
+      - "/business/"
+
+# =============================================================================
+# Kenyan Blogs & Knowledge Sites
+# =============================================================================
+blogs_knowledge:
+  - name: "Kenya Wikipedia"
+    urls:
+      - "https://en.wikipedia.org/wiki/Kenya"
+      - "https://en.wikipedia.org/wiki/History_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Geography_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Economy_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Culture_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Demographics_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Politics_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Education_in_Kenya"
+      - "https://en.wikipedia.org/wiki/Nairobi"
+      - "https://en.wikipedia.org/wiki/Mombasa"
+      - "https://en.wikipedia.org/wiki/Kisumu"
+      - "https://en.wikipedia.org/wiki/Nakuru"
+      - "https://en.wikipedia.org/wiki/Eldoret"
+      - "https://en.wikipedia.org/wiki/Counties_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Maasai_people"
+      - "https://en.wikipedia.org/wiki/Kikuyu_people"
+      - "https://en.wikipedia.org/wiki/Luo_people"
+      - "https://en.wikipedia.org/wiki/Kalenjin_people"
+      - "https://en.wikipedia.org/wiki/Luhya_people"
+      - "https://en.wikipedia.org/wiki/Swahili_language"
+      - "https://en.wikipedia.org/wiki/Sheng_language"
+      - "https://en.wikipedia.org/wiki/M-Pesa"
+      - "https://en.wikipedia.org/wiki/Safaricom"
+      - "https://en.wikipedia.org/wiki/Kenya_Vision_2030"
+      - "https://en.wikipedia.org/wiki/Kenyan_cuisine"
+      - "https://en.wikipedia.org/wiki/Music_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Maasai_Mara"
+      - "https://en.wikipedia.org/wiki/Mount_Kenya"
+      - "https://en.wikipedia.org/wiki/Lake_Victoria"
+      - "https://en.wikipedia.org/wiki/Kenya_Defence_Forces"
+      - "https://en.wikipedia.org/wiki/Transport_in_Kenya"
+      - "https://en.wikipedia.org/wiki/Mombasa%E2%80%93Nairobi_Standard_Gauge_Railway"
+      - "https://en.wikipedia.org/wiki/Jomo_Kenyatta"
+      - "https://en.wikipedia.org/wiki/Daniel_arap_Moi"
+      - "https://en.wikipedia.org/wiki/Mwai_Kibaki"
+      - "https://en.wikipedia.org/wiki/Uhuru_Kenyatta"
+      - "https://en.wikipedia.org/wiki/William_Ruto"
+      - "https://en.wikipedia.org/wiki/Wangari_Maathai"
+      - "https://en.wikipedia.org/wiki/Lupita_Nyong%27o"
+      - "https://en.wikipedia.org/wiki/Eliud_Kipchoge"
+      - "https://en.wikipedia.org/wiki/Kenyan_Premier_League"
+      - "https://en.wikipedia.org/wiki/Athletics_in_Kenya"
+      - "https://en.wikipedia.org/wiki/Kenyan_literature"
+      - "https://en.wikipedia.org/wiki/Ngugi_wa_Thiong%27o"
+      - "https://en.wikipedia.org/wiki/Silicon_Savannah"
+      - "https://en.wikipedia.org/wiki/Constitution_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Healthcare_in_Kenya"
+      - "https://en.wikipedia.org/wiki/Wildlife_of_Kenya"
+      - "https://en.wikipedia.org/wiki/Great_Rift_Valley,_Kenya"
+      - "https://en.wikipedia.org/wiki/Amboseli_National_Park"
+
+  - name: "Swahili Wikipedia Featured"
+    urls:
+      - "https://sw.wikipedia.org/wiki/Kenya"
+      - "https://sw.wikipedia.org/wiki/Nairobi"
+      - "https://sw.wikipedia.org/wiki/Kiswahili"
+      - "https://sw.wikipedia.org/wiki/Afrika_ya_Mashariki"
+
+# =============================================================================
+# Social Media / Forums
+# =============================================================================
+reddit:
+  subreddits:
+    - "Kenya"
+    - "Nairobi"
+    - "KenyanFood"
+  sort: "top"
+  time_filter: "all"
+  min_score: 5
+  min_comments: 3
+  max_posts_per_sub: 2000
+
+# =============================================================================
+# Kenyan Government & Public Data
+# =============================================================================
+government:
+  - name: "Kenya Law"
+    base_url: "http://kenyalaw.org"
+    description: "Constitution and legal resources"
+  - name: "KNBS"
+    base_url: "https://www.knbs.or.ke"
+    description: "Kenya National Bureau of Statistics"
+
+# =============================================================================
+# Synthetic Data Generation (using LLM API)
+# =============================================================================
+synthetic:
+  provider: "anthropic"
+  model: "claude-sonnet-4-20250514"
+  temperature: 0.8
+  max_tokens: 2048
+  batch_size: 10
+  target_conversations: 10000
+
+  # Topics to generate conversations about
+  topic_categories:
+    kenyan_history:
+      - "Pre-colonial Kenya and ethnic kingdoms"
+      - "Arab and Portuguese influence on the Coast"
+      - "British colonization and the Kenya Colony"
+      - "Mau Mau uprising and independence struggle"
+      - "Jomo Kenyatta and early independence"
+      - "Daniel arap Moi era and single-party rule"
+      - "Multi-party democracy and 2002 transition"
+      - "2007-2008 post-election violence"
+      - "2010 Constitution and devolution"
+      - "Recent political history"
+
+    geography_environment:
+      - "Kenya's 47 counties and their capitals"
+      - "Great Rift Valley and geological features"
+      - "Mount Kenya and highland regions"
+      - "Coastal regions and Swahili Coast"
+      - "Lake Victoria and western Kenya"
+      - "Arid and semi-arid lands (ASALs)"
+      - "National parks and game reserves"
+      - "Climate zones and weather patterns"
+      - "Environmental conservation efforts"
+      - "Wildlife and Big Five"
+
+    economy_business:
+      - "M-Pesa and mobile money revolution"
+      - "Safaricom and telecom industry"
+      - "Nairobi as a tech hub (Silicon Savannah)"
+      - "Agriculture: tea, coffee, flowers, horticulture"
+      - "Tourism industry and safari economy"
+      - "Real estate and construction boom"
+      - "Banking and financial services"
+      - "Small and medium enterprises (SMEs)"
+      - "Import/export and trade"
+      - "Employment and job market"
+      - "Informal economy (jua kali)"
+      - "Kenya Vision 2030"
+      - "SGR and infrastructure projects"
+
+    culture_society:
+      - "42+ ethnic communities and their traditions"
+      - "Kenyan cuisine: ugali, nyama choma, sukuma wiki, chapati, pilau"
+      - "Kenyan music: benga, genge, gengetone, gospel"
+      - "Kenyan fashion and style"
+      - "Harambee spirit and community fundraising"
+      - "Kenyan wedding traditions"
+      - "Religious landscape: Christianity, Islam, traditional"
+      - "Kenyan slang and Sheng language"
+      - "Matatu culture"
+      - "Kenyan comedy and entertainment"
+      - "Social media trends in Kenya"
+      - "Kenyan diaspora"
+
+    languages:
+      - "Swahili grammar and common phrases"
+      - "Swahili proverbs and meanings"
+      - "Sheng vocabulary and usage"
+      - "English-Swahili translation"
+      - "Code-switching in Kenyan conversation"
+      - "Regional language variations"
+      - "Kikuyu, Luo, Kalenjin, Luhya basics"
+
+    education:
+      - "8-4-4 education system"
+      - "CBC (Competency-Based Curriculum)"
+      - "KCPE and KCSE examinations"
+      - "University of Nairobi and major universities"
+      - "TVET institutions"
+      - "Student life in Kenya"
+      - "Scholarship opportunities"
+
+    sports:
+      - "Kenya's marathon and athletics dominance"
+      - "Eliud Kipchoge and running legends"
+      - "Kenya Sevens rugby"
+      - "Football: Harambee Stars, KPL"
+      - "Safari Rally"
+      - "Volleyball, cricket, and other sports"
+
+    technology:
+      - "Tech startups in Kenya"
+      - "iHub and innovation hubs"
+      - "Digital government services (e-Citizen)"
+      - "Internet and mobile penetration"
+      - "Fintech ecosystem"
+      - "Cybersecurity landscape"
+      - "AI and data science in Kenya"
+
+    daily_life:
+      - "Cost of living in Nairobi"
+      - "Public transport: matatus, boda bodas, SGR"
+      - "Housing and neighborhoods in Nairobi"
+      - "Healthcare system and NHIF/SHIF"
+      - "Shopping: malls, markets, online"
+      - "Nairobi nightlife and restaurants"
+      - "Safety tips for living in Kenya"
+      - "Utilities: electricity, water, internet"
+      - "Banking and mobile money day-to-day"
+
+    governance_law:
+      - "Kenya's Constitution 2010"
+      - "Devolution and county governments"
+      - "Judiciary and court system"
+      - "Parliament: National Assembly and Senate"
+      - "Electoral system and IEBC"
+      - "Taxes: KRA, PAYE, VAT"
+      - "Land rights and ownership"
+      - "Human rights landscape"
+
+    health:
+      - "Major hospitals in Kenya"
+      - "Common health challenges"
+      - "Traditional medicine and herbalism"
+      - "Mental health awareness"
+      - "HIV/AIDS response in Kenya"
+      - "Maternal and child health"

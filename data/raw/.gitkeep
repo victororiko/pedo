@@ -1,0 +1,3 @@
+# Add raw training data files here (.jsonl format)
+# Each file should contain chat-style conversations:
+# {"messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}

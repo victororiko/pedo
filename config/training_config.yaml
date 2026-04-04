@@ -1,0 +1,94 @@
+# Elumina — Training Configuration
+# Fine-tuning Gemma 4 27B with QLoRA on RunPod
+
+# =============================================================================
+# Model
+# =============================================================================
+model:
+  name: "google/gemma-4-27b-it"         # Base model from HuggingFace
+  torch_dtype: "bfloat16"
+  attn_implementation: "flash_attention_2"
+  trust_remote_code: true
+
+# =============================================================================
+# QLoRA Configuration
+# =============================================================================
+qlora:
+  r: 64                                  # LoRA rank (higher = more capacity, more VRAM)
+  lora_alpha: 128                        # Scaling factor (typically 2x rank)
+  lora_dropout: 0.05
+  target_modules:                        # Modules to apply LoRA to
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  quantization_bits: 4                   # 4-bit quantization (QLoRA)
+  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_quant_type: "nf4"            # Normal Float 4
+  bnb_4bit_use_double_quant: true        # Double quantization for extra savings
+
+# =============================================================================
+# Training Hyperparameters
+# =============================================================================
+training:
+  output_dir: "./output/elumina-27b-qlora"
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 16        # Effective batch size = 16
+  gradient_checkpointing: true
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  max_seq_length: 4096
+  fp16: false
+  bf16: true
+  logging_steps: 10
+  save_steps: 100
+  eval_steps: 100
+  eval_strategy: "steps"
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+  report_to: "wandb"                     # Set to "none" to disable
+  seed: 42
+  dataloader_num_workers: 4
+  optim: "paged_adamw_8bit"
+  group_by_length: true
+  packing: true                          # Pack short sequences together
+
+# =============================================================================
+# Data
+# =============================================================================
+data:
+  train_file: "./data/processed/train.jsonl"
+  eval_file: "./data/processed/eval.jsonl"
+  eval_split_ratio: 0.05                 # 5% of data for evaluation
+  max_samples: null                      # Set to integer to limit training samples
+  chat_template: null                    # Use model's default chat template
+  identity_oversample: 20                # How many times to repeat identity data (5-50x recommended)
+
+# =============================================================================
+# Adapter & Merged Output
+# =============================================================================
+output:
+  adapter_dir: "./output/elumina-27b-qlora/adapter"
+  merged_dir: "./output/elumina-27b-merged"
+  push_to_hub: false
+  hub_model_id: "intevia/elumina-27b"   # Change if pushing to HuggingFace
+
+# =============================================================================
+# WandB (optional, for experiment tracking)
+# =============================================================================
+wandb:
+  project: "elumina"
+  name: "elumina-27b-qlora-v1"
+  tags: ["gemma4", "qlora", "kenyan", "multilingual"]
