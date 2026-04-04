@@ -87,6 +87,19 @@ def main():
     model.config.use_cache = False
     model = prepare_model_for_kbit_training(model)
 
+    # Gemma 4 uses Gemma4ClippableLinear wrappers around Linear4bit.
+    # PEFT doesn't recognize these, so unwrap them before applying LoRA.
+    import torch.nn as nn
+    for name, module in model.named_modules():
+        # Replace ClippableLinear wrappers with their inner Linear4bit layer
+        if type(module).__name__ == "Gemma4ClippableLinear":
+            inner = module.linear
+            # Navigate to parent module and replace
+            parts = name.rsplit(".", 1)
+            if len(parts) == 2:
+                parent = model.get_submodule(parts[0])
+                setattr(parent, parts[1], inner)
+
     # Apply LoRA
     lora_config = setup_lora(cfg)
     model = get_peft_model(model, lora_config)
