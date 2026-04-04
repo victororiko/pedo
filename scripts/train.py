@@ -157,7 +157,6 @@ def main():
         seed=training_cfg["seed"],
         dataloader_num_workers=training_cfg["dataloader_num_workers"],
         optim=training_cfg["optim"],
-        group_by_length=training_cfg["group_by_length"],
     )
 
     # Initialize trainer
