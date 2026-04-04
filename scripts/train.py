@@ -159,13 +159,16 @@ def main():
         optim=training_cfg["optim"],
     )
 
-    # Patch: inject mm_token_type_ids for text-only Gemma4 training
+    # Patch: inject token_type_ids for text-only Gemma training
+    # Gemma 3 needs token_type_ids, Gemma 4 needs mm_token_type_ids
     _inner_model = model.base_model.model.model
     _orig_forward = _inner_model.__class__.forward
     def _patched_forward(self, *args, **kwargs):
-        if 'mm_token_type_ids' not in kwargs or kwargs['mm_token_type_ids'] is None:
-            input_ids = kwargs.get('input_ids', args[0] if args else None)
-            if input_ids is not None:
+        input_ids = kwargs.get('input_ids', args[0] if args else None)
+        if input_ids is not None:
+            if 'token_type_ids' not in kwargs or kwargs['token_type_ids'] is None:
+                kwargs['token_type_ids'] = torch.zeros_like(input_ids)
+            if 'mm_token_type_ids' not in kwargs or kwargs.get('mm_token_type_ids') is None:
                 kwargs['mm_token_type_ids'] = torch.zeros_like(input_ids)
         return _orig_forward(self, *args, **kwargs)
     _inner_model.__class__.forward = _patched_forward
