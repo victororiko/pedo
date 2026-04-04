@@ -159,18 +159,16 @@ def main():
         optim=training_cfg["optim"],
     )
 
-    # Gemma 4 is multimodal — requires mm_token_type_ids even for text-only training.
-    # Patch the model's forward to auto-inject zeros when not provided.
-    _original_forward = model.base_model.model.model.forward.__wrapped__ if hasattr(model.base_model.model.model.forward, '__wrapped__') else model.base_model.model.model.forward
-    import functools
-    @functools.wraps(_original_forward)
-    def _patched_forward(*args, **kwargs):
+    # Patch: inject mm_token_type_ids for text-only Gemma4 training
+    _inner_model = model.base_model.model.model
+    _orig_forward = _inner_model.__class__.forward
+    def _patched_forward(self, *args, **kwargs):
         if 'mm_token_type_ids' not in kwargs or kwargs['mm_token_type_ids'] is None:
             input_ids = kwargs.get('input_ids', args[0] if args else None)
             if input_ids is not None:
                 kwargs['mm_token_type_ids'] = torch.zeros_like(input_ids)
-        return _original_forward(*args, **kwargs)
-    model.base_model.model.model.forward = _patched_forward
+        return _orig_forward(self, *args, **kwargs)
+    _inner_model.__class__.forward = _patched_forward
 
     # Initialize trainer
     trainer = SFTTrainer(
