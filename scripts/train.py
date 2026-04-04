@@ -85,16 +85,23 @@ def main():
 
     # Prepare for QLoRA training
     model.config.use_cache = False
-    model = prepare_model_for_kbit_training(model)
+    
+    # Skip prepare_model_for_kbit_training — it tries to cast all params to float32
+    # which OOMs on multi-GPU with large models. Do the essentials manually:
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    for param in model.parameters():
+        param.requires_grad = False
+        if param.ndim == 1:
+            # Cast layer norm params to float32 for stability (they're tiny)
+            param.data = param.data.to(torch.float32)
 
     # Gemma 4 uses Gemma4ClippableLinear wrappers around Linear4bit.
     # PEFT doesn't recognize these, so unwrap them before applying LoRA.
     import torch.nn as nn
-    for name, module in model.named_modules():
+    for name, module in list(model.named_modules()):
         # Replace ClippableLinear wrappers with their inner Linear4bit layer
         if type(module).__name__ == "Gemma4ClippableLinear":
             inner = module.linear
-            # Navigate to parent module and replace
             parts = name.rsplit(".", 1)
             if len(parts) == 2:
                 parent = model.get_submodule(parts[0])
