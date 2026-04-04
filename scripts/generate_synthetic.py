@@ -171,34 +171,106 @@ class SyntheticGenerator:
         if not text:
             return []
 
-        # Strip markdown fencing if present
         text = text.strip()
-        text = re.sub(r"^```json\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
 
+        # Strip markdown fencing anywhere in the text
+        text = re.sub(r"```json\s*\n?", "", text)
+        text = re.sub(r"```\s*$", "", text, flags=re.MULTILINE)
+
+        # Try to find the JSON array boundaries
+        start = text.find("[")
+        if start == -1:
+            logger.warning("Failed to parse LLM output as conversations (no JSON array found)")
+            return []
+
+        text = text[start:]
+
+        # Try direct parse first
         try:
             data = json.loads(text)
-            if isinstance(data, list):
-                # Validate each conversation
-                valid = []
-                for item in data:
-                    if isinstance(item, dict) and "messages" in item:
-                        messages = item["messages"]
-                        if isinstance(messages, list) and len(messages) >= 2:
-                            valid.append(item)
-                return valid
+            return self._validate_conversations(data)
         except json.JSONDecodeError:
-            # Try to extract JSON array from the text
-            match = re.search(r"\[.*\]", text, re.DOTALL)
-            if match:
-                try:
-                    data = json.loads(match.group())
-                    return [item for item in data if isinstance(item, dict) and "messages" in item]
-                except json.JSONDecodeError:
-                    pass
+            pass
+
+        # Handle truncated JSON: try to repair by closing open structures
+        repaired = self._repair_truncated_json(text)
+        if repaired:
+            try:
+                data = json.loads(repaired)
+                return self._validate_conversations(data)
+            except json.JSONDecodeError:
+                pass
+
+        # Last resort: extract individual conversation objects via regex
+        convos = []
+        pattern = r'\{"messages"\s*:\s*\[.*?\]\s*(?:,\s*"[^"]+"\s*:\s*(?:"[^"]*"|[^,}]*))*\}'
+        for match in re.finditer(pattern, text, re.DOTALL):
+            try:
+                obj = json.loads(match.group())
+                if "messages" in obj and len(obj["messages"]) >= 2:
+                    convos.append(obj)
+            except json.JSONDecodeError:
+                continue
+
+        if convos:
+            return convos
 
         logger.warning("Failed to parse LLM output as conversations")
+        if len(text) > 200:
+            logger.debug(f"  First 200 chars: {text[:200]}")
+            logger.debug(f"  Last 200 chars: {text[-200:]}")
         return []
+
+    def _repair_truncated_json(self, text: str) -> str | None:
+        """Attempt to repair truncated JSON by closing open brackets/braces."""
+        # Find the last complete conversation object
+        # Look for the pattern: }, { or }, ] that indicates object boundaries
+        last_complete = -1
+        depth_brace = 0
+        depth_bracket = 0
+        in_string = False
+        escape = False
+
+        for i, ch in enumerate(text):
+            if escape:
+                escape = False
+                continue
+            if ch == '\\' and in_string:
+                escape = True
+                continue
+            if ch == '"' and not escape:
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+
+            if ch == '{':
+                depth_brace += 1
+            elif ch == '}':
+                depth_brace -= 1
+                if depth_brace == 0 and depth_bracket == 1:
+                    # Just closed a top-level object inside the array
+                    last_complete = i
+            elif ch == '[':
+                depth_bracket += 1
+            elif ch == ']':
+                depth_bracket -= 1
+
+        if last_complete > 0:
+            return text[:last_complete + 1] + "]"
+        return None
+
+    def _validate_conversations(self, data) -> list[dict]:
+        """Validate and filter conversation objects."""
+        if not isinstance(data, list):
+            return []
+        valid = []
+        for item in data:
+            if isinstance(item, dict) and "messages" in item:
+                messages = item["messages"]
+                if isinstance(messages, list) and len(messages) >= 2:
+                    valid.append(item)
+        return valid
 
     def generate_from_topics(self, output_path: str) -> list[dict]:
         """Generate conversations from configured topic categories."""
@@ -312,11 +384,11 @@ class SyntheticGenerator:
     def generate_swahili_pairs(self, output_path: str, count: int = 500) -> list[dict]:
         """Generate Swahili/English conversation pairs for language training."""
         prompts_batch = [
-            "Generate {n} conversations where a user asks something in Swahili and Elumina responds in Swahili. Topics: daily life, technology, news, culture. The conversations should be natural Kenyan Swahili (not formal/Tanzanian Swahili). Include some Sheng slang.",
-            "Generate {n} conversations where a user code-switches between English and Swahili (common in Kenya), and Elumina responds matching their language style. Topics: work, school, relationships, money, transport.",
-            "Generate {n} conversations where a user asks in English about Swahili language: grammar questions, translations, proverbs, idioms. Elumina explains in English with Swahili examples.",
-            "Generate {n} conversations in pure Sheng (Kenyan street slang mixing Swahili/English/other languages). Topics: matatu culture, music, food, social life, money.",
-            "Generate {n} conversations where Elumina teaches Kikuyu, Luo, Kalenjin, or Luhya phrases. User asks how to say things in these languages and Elumina provides translations with cultural context.",
+            'Generate {n} conversations where a user asks something in Swahili and Elumina responds in Swahili. Topics: daily life, technology, news, culture. The conversations should be natural Kenyan Swahili (not formal/Tanzanian Swahili). Include some Sheng slang.\n\nReturn ONLY a JSON array: [{{"messages": [{{"role": "user", "content": "..."}}, {{"role": "assistant", "content": "..."}}]}}]',
+            'Generate {n} conversations where a user code-switches between English and Swahili (common in Kenya), and Elumina responds matching their language style. Topics: work, school, relationships, money, transport.\n\nReturn ONLY a JSON array: [{{"messages": [{{"role": "user", "content": "..."}}, {{"role": "assistant", "content": "..."}}]}}]',
+            'Generate {n} conversations where a user asks in English about Swahili language: grammar questions, translations, proverbs, idioms. Elumina explains in English with Swahili examples.\n\nReturn ONLY a JSON array: [{{"messages": [{{"role": "user", "content": "..."}}, {{"role": "assistant", "content": "..."}}]}}]',
+            'Generate {n} conversations in pure Sheng (Kenyan street slang mixing Swahili/English/other languages). Topics: matatu culture, music, food, social life, money.\n\nReturn ONLY a JSON array: [{{"messages": [{{"role": "user", "content": "..."}}, {{"role": "assistant", "content": "..."}}]}}]',
+            'Generate {n} conversations where Elumina teaches Kikuyu, Luo, Kalenjin, or Luhya phrases. User asks how to say things in these languages and Elumina provides translations with cultural context.\n\nReturn ONLY a JSON array: [{{"messages": [{{"role": "user", "content": "..."}}, {{"role": "assistant", "content": "..."}}]}}]',
         ]
 
         all_conversations = []

@@ -153,21 +153,32 @@ def main():
         load_best_model_at_end=training_cfg["load_best_model_at_end"],
         metric_for_best_model=training_cfg["metric_for_best_model"],
         greater_is_better=training_cfg["greater_is_better"],
-        report_to=training_cfg["report_to"],
+        report_to="none",
         seed=training_cfg["seed"],
         dataloader_num_workers=training_cfg["dataloader_num_workers"],
         optim=training_cfg["optim"],
     )
 
+    # Gemma 4 is multimodal — requires mm_token_type_ids even for text-only training.
+    # Patch the model's forward to auto-inject zeros when not provided.
+    _original_forward = model.base_model.model.model.forward.__wrapped__ if hasattr(model.base_model.model.model.forward, '__wrapped__') else model.base_model.model.model.forward
+    import functools
+    @functools.wraps(_original_forward)
+    def _patched_forward(*args, **kwargs):
+        if 'mm_token_type_ids' not in kwargs or kwargs['mm_token_type_ids'] is None:
+            input_ids = kwargs.get('input_ids', args[0] if args else None)
+            if input_ids is not None:
+                kwargs['mm_token_type_ids'] = torch.zeros_like(input_ids)
+        return _original_forward(*args, **kwargs)
+    model.base_model.model.model.forward = _patched_forward
+
     # Initialize trainer
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         args=training_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["eval"],
-        max_seq_length=training_cfg["max_seq_length"],
-        packing=training_cfg.get("packing", True),
     )
 
     # Train

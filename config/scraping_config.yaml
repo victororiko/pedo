@@ -185,7 +185,7 @@ synthetic:
   provider: "anthropic"
   model: "claude-sonnet-4-20250514"
   temperature: 0.8
-  max_tokens: 2048
+  max_tokens: 4096
   batch_size: 10
   target_conversations: 10000
 
